@@ -20,7 +20,13 @@ function HomePage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isPortrait = useMediaQuery('(orientation: portrait)');
   const isLandscape = useMediaQuery('(orientation: landscape)');
+  
+  // 세로 레이아웃을 사용할 조건: 모바일이거나 태블릿 세로모드
+  const useVerticalLayout = isMobile || (isTablet && isPortrait);
+  
   const { devMode, setDevMode, showCharacter, setShowCharacter } = useAppSettings();
   const [user, setUser] = useState<null | { name: string }>(null);
 
@@ -32,175 +38,179 @@ function HomePage() {
     setUser(null);
   };
 
+  // 공통 패딩값 설정
+  const commonPadding = { xs: 2, sm: 3 };
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 헤더 - 둥근 모서리 제거, 직사각형으로 */}
-      <AppBar 
-        position="static" 
-        sx={{ 
-          bgcolor: '#8BC34A',
-          boxShadow: 3
-        }}
-      >
-        <Toolbar sx={{ height: { xs: 56, sm: 64 }, minHeight: 0, px: { xs: 2, sm: 3 } }}>
-          {/* 로고/타이틀 with 캐릭터 */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              flexGrow: 1,
-              cursor: 'pointer',
-              height: '100%',
-              '&:hover': {
-                opacity: 0.9
-              }
-            }}
-            onClick={() => navigate('/')}
-          >
-            {showCharacter && (
-              <Box sx={{ 
-                height: '100%',
+      {/* 전체를 감싸는 컨테이너로 좌우 패딩 통일 */}
+      <Box sx={{ px: commonPadding, pt: 1, pb: 0 }}>
+        {/* 헤더 - margin 제거하고 borderRadius 유지 */}
+        <AppBar 
+          position="static" 
+          sx={{ 
+            bgcolor: '#8BC34A',
+            borderRadius: 2,
+            boxShadow: 3
+          }}
+        >
+          <Toolbar sx={{ height: { xs: 56, sm: 64 }, minHeight: 0 }}>
+            {/* 로고/타이틀 with 캐릭터 */}
+            <Box 
+              sx={{ 
                 display: 'flex', 
-                alignItems: 'center',
-              }}>
-                <CharacterMascot 
-                  page="homepage"
-                  emotion="header"
-                  height="100%"
-                  style={{ 
-                    marginRight: '8px',
-                    height: '100%',
-                    width: 'auto'
+                alignItems: 'center', 
+                flexGrow: 1,
+                cursor: 'pointer',
+                height: '100%',
+                '&:hover': {
+                  opacity: 0.9
+                }
+              }}
+              onClick={() => navigate('/')}
+            >
+              {showCharacter && (
+                <Box sx={{ 
+                  height: '100%',
+                  display: 'flex', 
+                  alignItems: 'center',
+                }}>
+                  <CharacterMascot 
+                    page="homepage"
+                    emotion="header"
+                    height="100%"
+                    style={{ 
+                      marginRight: '8px',
+                      height: '100%',
+                      width: 'auto'
+                    }}
+                  />
+                </Box>
+              )}
+              <Typography 
+                variant="h5" 
+                component="div" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  fontSize: 'clamp(1.125rem, 3vw, 1.75rem)',
+                  color: 'white'
+                }}
+              >
+                LivreSinc
+              </Typography>
+            </Box>
+
+            {/* 캐릭터 표시 체크박스 */}
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={showCharacter} 
+                  onChange={(e) => setShowCharacter(e.target.checked)}
+                  size="small"
+                  sx={{ 
+                    color: 'white',
+                    '&.Mui-checked': { color: 'white' },
+                    padding: '4px'
                   }}
                 />
-              </Box>
+              }
+              label="캐릭터 표시"
+              sx={{ 
+                color: 'white',
+                mr: 1,
+                '& .MuiFormControlLabel-label': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }
+              }}
+            />
+
+            {/* 개발자 모드 체크박스 */}
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={devMode} 
+                  onChange={(e) => setDevMode(e.target.checked)}
+                  size="small"
+                  sx={{ 
+                    color: 'white',
+                    '&.Mui-checked': { color: 'white' },
+                    padding: '4px'
+                  }}
+                />
+              }
+              label="개발자 모드"
+              sx={{ 
+                color: 'white',
+                mr: 1,
+                '& .MuiFormControlLabel-label': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }
+              }}
+            />
+
+            {/* 로그인/로그아웃 버튼 */}
+            {user ? (
+              <Button 
+                color="inherit" 
+                onClick={handleLogout}
+                size="small"
+                sx={{ 
+                  border: '1px solid white',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  py: 0.5,
+                  px: { xs: 0.75, sm: 1 },
+                  minWidth: 'auto',
+                  '&:hover': { 
+                    bgcolor: 'rgba(255, 255, 255, 0.1)' 
+                  }
+                }}
+              >
+                로그아웃
+              </Button>
+            ) : (
+              <Button 
+                color="inherit" 
+                onClick={handleLogin}
+                size="small"
+                sx={{ 
+                  border: '1px solid white',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  py: 0.5,
+                  px: { xs: 0.75, sm: 1 },
+                  minWidth: 'auto',
+                  '&:hover': { 
+                    bgcolor: 'rgba(255, 255, 255, 0.1)' 
+                  }
+                }}
+              >
+                로그인
+              </Button>
             )}
-            <Typography 
-              variant="h5" 
-              component="div" 
-              sx={{ 
-                fontWeight: 'bold',
-                fontSize: 'clamp(1.125rem, 3vw, 1.75rem)',
-                color: 'white'
-              }}
-            >
-              LivreSinc
-            </Typography>
-          </Box>
+          </Toolbar>
+        </AppBar>
+      </Box>
 
-          {/* 캐릭터 표시 체크박스 */}
-          <FormControlLabel
-            control={
-              <Checkbox 
-                checked={showCharacter} 
-                onChange={(e) => setShowCharacter(e.target.checked)}
-                size="small"
-                sx={{ 
-                  color: 'white',
-                  '&.Mui-checked': { color: 'white' },
-                  padding: '4px'
-                }}
-              />
-            }
-            label="캐릭터 표시"
-            sx={{ 
-              color: 'white',
-              mr: 1,
-              '& .MuiFormControlLabel-label': {
-                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-              }
-            }}
-          />
-
-          {/* 개발자 모드 체크박스 */}
-          <FormControlLabel
-            control={
-              <Checkbox 
-                checked={devMode} 
-                onChange={(e) => setDevMode(e.target.checked)}
-                size="small"
-                sx={{ 
-                  color: 'white',
-                  '&.Mui-checked': { color: 'white' },
-                  padding: '4px'
-                }}
-              />
-            }
-            label="개발자 모드"
-            sx={{ 
-              color: 'white',
-              mr: 1,
-              '& .MuiFormControlLabel-label': {
-                fontSize: { xs: '0.75rem', sm: '0.875rem' }
-              }
-            }}
-          />
-
-          {/* 로그인/로그아웃 버튼 */}
-          {user ? (
-            <Button 
-              color="inherit" 
-              onClick={handleLogout}
-              size="small"
-              sx={{ 
-                border: '1px solid white',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                py: 0.5,
-                px: { xs: 0.75, sm: 1 },
-                minWidth: 'auto',
-                '&:hover': { 
-                  bgcolor: 'rgba(255, 255, 255, 0.1)' 
-                }
-              }}
-            >
-              로그아웃
-            </Button>
-          ) : (
-            <Button 
-              color="inherit" 
-              onClick={handleLogin}
-              size="small"
-              sx={{ 
-                border: '1px solid white',
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                py: 0.5,
-                px: { xs: 0.75, sm: 1 },
-                minWidth: 'auto',
-                '&:hover': { 
-                  bgcolor: 'rgba(255, 255, 255, 0.1)' 
-                }
-              }}
-            >
-              로그인
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
-
-      {/* 메인 컨텐츠 - 배경색 제거하고 버튼만 보이게 */}
+      {/* 메인 컨텐츠 - 동일한 좌우 패딩 */}
       <Box 
         component="main" 
         sx={{ 
           flexGrow: 1, 
           display: 'flex', 
-          alignItems: 'center', // 가로 모드에서 중앙 정렬
+          alignItems: 'center',
           justifyContent: 'center',
-          px: { xs: 1, sm: 2 }, // 좌우 여백만
-          py: { xs: 1, sm: 2 },
+          px: commonPadding, // 헤더와 동일한 좌우 패딩
+          py: { xs: 1.5, sm: 2 },
         }}
       >
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { 
-              xs: '1fr', 
-              md: 'repeat(3, 1fr)'
-            },
-            gridAutoRows: 'minmax(100px, auto)', // 최소 높이 보장
+            gridTemplateColumns: useVerticalLayout ? '1fr' : 'repeat(3, 1fr)',
+            gridAutoRows: 'minmax(100px, auto)',
             gap: { xs: '8px', sm: '12px', md: '16px' },
             width: '100%',
-            maxWidth: '1200px', // 최대 너비 제한
-            height: isLandscape && !isMobile ? 'auto' : '100%',
+            maxWidth: '1200px',
+            height: isLandscape && !useVerticalLayout ? 'auto' : '100%',
           }}
         >
           {/* 총괄 대시보드 버튼 - 노란색 */}
@@ -225,7 +235,7 @@ function HomePage() {
               bgcolor: '#FFD54F',
               color: 'rgba(0, 0, 0, 0.87)',
               display: 'flex',
-              flexDirection: { xs: 'row', md: 'column' },
+              flexDirection: useVerticalLayout ? 'row' : 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
@@ -235,7 +245,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape ? '120px' : '140px' 
+                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#FFC107',
@@ -247,21 +257,21 @@ function HomePage() {
           >
             {showCharacter && (
               <Box sx={{ 
-                flex: isMobile ? '0 0 auto' : '1 1 auto',
+                flex: useVerticalLayout ? '0 0 auto' : '1 1 auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: isMobile ? 'auto' : '100%',
-                height: isMobile ? '90%' : 'auto',
-                maxWidth: isMobile ? '35%' : '100%',
+                width: useVerticalLayout ? 'auto' : '100%',
+                height: useVerticalLayout ? '90%' : 'auto',
+                maxWidth: useVerticalLayout ? '35%' : '100%',
               }}>
                 <CharacterMascot 
                   page="homepage"
                   emotion="dashboard"
-                  height={isMobile ? '100%' : 'auto'}
+                  height={useVerticalLayout ? '100%' : 'auto'}
                   style={{ 
-                    width: isMobile ? 'auto' : '90%', // 크게 유지
-                    height: isMobile ? '100%' : 'auto',
+                    width: useVerticalLayout ? 'auto' : '90%',
+                    height: useVerticalLayout ? '100%' : 'auto',
                     maxWidth: '100%',
                     objectFit: 'contain'
                   }}
@@ -269,7 +279,7 @@ function HomePage() {
               </Box>
             )}
             <Typography sx={{ 
-              flex: isMobile ? '1 1 auto' : '0 0 auto',
+              flex: useVerticalLayout ? '1 1 auto' : '0 0 auto',
               fontSize: 'inherit',
               fontWeight: 'inherit',
               whiteSpace: 'nowrap'
@@ -300,7 +310,7 @@ function HomePage() {
               bgcolor: '#A1887F',
               color: 'white',
               display: 'flex',
-              flexDirection: { xs: 'row', md: 'column' },
+              flexDirection: useVerticalLayout ? 'row' : 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
@@ -310,7 +320,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape ? '120px' : '140px' 
+                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#8D6E63',
@@ -322,21 +332,21 @@ function HomePage() {
           >
             {showCharacter && (
               <Box sx={{ 
-                flex: isMobile ? '0 0 auto' : '1 1 auto',
+                flex: useVerticalLayout ? '0 0 auto' : '1 1 auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: isMobile ? 'auto' : '100%',
-                height: isMobile ? '90%' : 'auto',
-                maxWidth: isMobile ? '35%' : '100%',
+                width: useVerticalLayout ? 'auto' : '100%',
+                height: useVerticalLayout ? '90%' : 'auto',
+                maxWidth: useVerticalLayout ? '35%' : '100%',
               }}>
                 <CharacterMascot 
                   page="homepage"
                   emotion="ordo"
-                  height={isMobile ? '100%' : 'auto'}
+                  height={useVerticalLayout ? '100%' : 'auto'}
                   style={{ 
-                    width: isMobile ? 'auto' : '90%',
-                    height: isMobile ? '100%' : 'auto',
+                    width: useVerticalLayout ? 'auto' : '90%',
+                    height: useVerticalLayout ? '100%' : 'auto',
                     maxWidth: '100%',
                     objectFit: 'contain'
                   }}
@@ -344,7 +354,7 @@ function HomePage() {
               </Box>
             )}
             <Typography sx={{ 
-              flex: isMobile ? '1 1 auto' : '0 0 auto',
+              flex: useVerticalLayout ? '1 1 auto' : '0 0 auto',
               fontSize: 'inherit',
               fontWeight: 'inherit',
               whiteSpace: 'nowrap'
@@ -375,7 +385,7 @@ function HomePage() {
               bgcolor: '#E91E63',
               color: 'white',
               display: 'flex',
-              flexDirection: { xs: 'row', md: 'column' },
+              flexDirection: useVerticalLayout ? 'row' : 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
@@ -385,7 +395,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape ? '120px' : '140px' 
+                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#C2185B',
@@ -397,21 +407,21 @@ function HomePage() {
           >
             {showCharacter && (
               <Box sx={{ 
-                flex: isMobile ? '0 0 auto' : '1 1 auto',
+                flex: useVerticalLayout ? '0 0 auto' : '1 1 auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: isMobile ? 'auto' : '100%',
-                height: isMobile ? '90%' : 'auto',
-                maxWidth: isMobile ? '35%' : '100%',
+                width: useVerticalLayout ? 'auto' : '100%',
+                height: useVerticalLayout ? '90%' : 'auto',
+                maxWidth: useVerticalLayout ? '35%' : '100%',
               }}>
                 <CharacterMascot 
                   page="homepage"
                   emotion="pagina"
-                  height={isMobile ? '100%' : 'auto'}
+                  height={useVerticalLayout ? '100%' : 'auto'}
                   style={{ 
-                    width: isMobile ? 'auto' : '90%',
-                    height: isMobile ? '100%' : 'auto',
+                    width: useVerticalLayout ? 'auto' : '90%',
+                    height: useVerticalLayout ? '100%' : 'auto',
                     maxWidth: '100%',
                     objectFit: 'contain'
                   }}
@@ -419,7 +429,7 @@ function HomePage() {
               </Box>
             )}
             <Typography sx={{ 
-              flex: isMobile ? '1 1 auto' : '0 0 auto',
+              flex: useVerticalLayout ? '1 1 auto' : '0 0 auto',
               fontSize: 'inherit',
               fontWeight: 'inherit',
               whiteSpace: 'nowrap'
