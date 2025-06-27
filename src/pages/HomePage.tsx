@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Button, 
@@ -19,13 +19,42 @@ import { CharacterMascot } from '../components/CharacterMascot';
 function HomePage() {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  const isPortrait = useMediaQuery('(orientation: portrait)');
-  const isLandscape = useMediaQuery('(orientation: landscape)');
   
-  // 세로 레이아웃을 사용할 조건: 모바일이거나 태블릿 세로모드
-  const useVerticalLayout = isMobile || (isTablet && isPortrait);
+  // 기본 미디어 쿼리
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px 미만
+  const isTablet = useMediaQuery(theme.breakpoints.down('md')); // 900px 미만
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md')); // 900px 이상
+  
+  // 화면 크기 직접 감지
+  const [screenOrientation, setScreenOrientation] = useState<'portrait' | 'landscape'>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+    }
+    return 'portrait';
+  });
+
+  // 윈도우 크기 변경 감지
+  useEffect(() => {
+    const handleResize = () => {
+      const isPortraitMode = window.innerHeight > window.innerWidth;
+      setScreenOrientation(isPortraitMode ? 'portrait' : 'landscape');
+    };
+
+    // 초기 설정
+    handleResize();
+
+    // 이벤트 리스너 추가
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  // 세로 레이아웃 사용 조건 (더 명확하게)
+  const useVerticalLayout = isMobile || (isTablet && screenOrientation === 'portrait') || (!isDesktop && screenOrientation === 'portrait');
   
   const { devMode, setDevMode, showCharacter, setShowCharacter } = useAppSettings();
   const [user, setUser] = useState<null | { name: string }>(null);
@@ -198,19 +227,19 @@ function HomePage() {
           display: 'flex', 
           alignItems: 'center',
           justifyContent: 'center',
-          px: commonPadding, // 헤더와 동일한 좌우 패딩
+          px: commonPadding,
           py: { xs: 1.5, sm: 2 },
         }}
       >
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: useVerticalLayout ? '1fr' : 'repeat(3, 1fr)',
+            gridTemplateColumns: useVerticalLayout ? '1fr' : 'repeat(3, 1fr)', // 명확한 조건
             gridAutoRows: 'minmax(100px, auto)',
             gap: { xs: '8px', sm: '12px', md: '16px' },
             width: '100%',
             maxWidth: '1200px',
-            height: isLandscape && !useVerticalLayout ? 'auto' : '100%',
+            height: (!useVerticalLayout) ? 'auto' : '100%',
           }}
         >
           {/* 총괄 대시보드 버튼 - 노란색 */}
@@ -235,7 +264,7 @@ function HomePage() {
               bgcolor: '#FFD54F',
               color: 'rgba(0, 0, 0, 0.87)',
               display: 'flex',
-              flexDirection: useVerticalLayout ? 'row' : 'column',
+              flexDirection: useVerticalLayout ? 'row' : 'column', // 명확한 조건
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
@@ -245,7 +274,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
+                md: (!useVerticalLayout) ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#FFC107',
@@ -320,7 +349,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
+                md: (!useVerticalLayout) ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#8D6E63',
@@ -395,7 +424,7 @@ function HomePage() {
               minHeight: { 
                 xs: '80px', 
                 sm: '100px', 
-                md: isLandscape && !useVerticalLayout ? '120px' : '140px' 
+                md: (!useVerticalLayout) ? '120px' : '140px' 
               },
               '&:hover': {
                 bgcolor: '#C2185B',
@@ -474,7 +503,7 @@ function HomePage() {
         </Box>
       )}
 
-      {/* 개발자 모드 표시 */}
+      {/* 개발자 모드 표시 - 디버깅 정보 추가 */}
       {devMode && (
         <Box 
           sx={{ 
@@ -492,6 +521,10 @@ function HomePage() {
         >
           <Typography sx={{ fontSize: { xs: '0.5rem', sm: '0.625rem', md: '0.75rem' } }}>
             개발자 모드 활성화됨 - 더미 데이터 사용 중
+            <br />
+            화면: {window.innerWidth}x{window.innerHeight} | 
+            방향: {screenOrientation} | 
+            레이아웃: {useVerticalLayout ? '세로' : '가로'}
           </Typography>
         </Box>
       )}
